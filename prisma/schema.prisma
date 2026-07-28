@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatar        String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  enrollments   Enrollment[]
+  progress      Progress[]
+  certificates  Certificate[]
+  payments      Payment[]
+  badges        Badge[]
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  
+  @@map("users")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  price       Int      // en centimes FCFA
+  duration    Int      // en semaines
+  videoCount  Int      @default(0)
+  image       String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  modules     Module[]
+  enrollments Enrollment[]
+  
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  order       Int
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  lessons     Lesson[]
+  
+  @@map("modules")
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  type        LessonType
+  content     String?
+  videoUrl    String?
+  order       Int
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  quiz        Quiz?
+  progress    Progress[]
+  
+  @@map("lessons")
+}
+
+model Quiz {
+  id          String   @id @default(cuid())
+  lessonId    String   @unique
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions   Json     // { question, options, correctAnswer }[]
+  
+  @@map("quizzes")
+}
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status      EnrollmentStatus @default(ACTIVE)
+  progress    Int      @default(0)
+  enrolledAt  DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model Progress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  
+  @@unique([userId, lessonId])
+  @@map("progress")
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  issuedAt    DateTime @default(now())
+  verifyId    String   @unique
+  qrCode      String?
+  
+  @@map("certificates")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  currency    String   @default("XOF")
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  
+  @@map("payments")
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        BadgeType
+  earnedAt    DateTime @default(now())
+  
+  @@unique([userId, type])
+  @@map("badges")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  INSTRUCTOR
+}
+
+enum LessonType {
+  VIDEO
+  PDF
+  QUIZ
+  ASSIGNMENT
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum PaymentMethod {
+  ORANGE_MONEY
+  MTN_MONEY
+  WAVE
+  CARD
+  PAYPAL
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum BadgeType {
+  FIRST_STEP
+  QUIZ_MASTER
+  STREAK_7
+  PORTFOLIO
+  MENTOR
+  FIGMA_EXPERT
+}
