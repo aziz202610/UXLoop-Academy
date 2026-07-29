@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== MODELES EXISTANTS (ton académie) ====================
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -15,7 +17,7 @@ model User {
   role          Role      @default(STUDENT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   enrollments   Enrollment[]
   progress      Progress[]
   certificates  Certificate[]
@@ -23,7 +25,7 @@ model User {
   badges        Badge[]
   xp            Int       @default(0)
   level         Int       @default(1)
-  
+
   @@map("users")
 }
 
@@ -32,16 +34,16 @@ model Course {
   title       String
   slug        String   @unique
   description String?
-  price       Int      // en centimes FCFA
-  duration    Int      // en semaines
+  price       Int
+  duration    Int
   videoCount  Int      @default(0)
   image       String?
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
-  
+
   modules     Module[]
   enrollments Enrollment[]
-  
+
   @@map("courses")
 }
 
@@ -51,9 +53,9 @@ model Module {
   order       Int
   courseId    String
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
+
   lessons     Lesson[]
-  
+
   @@map("modules")
 }
 
@@ -66,10 +68,10 @@ model Lesson {
   order       Int
   moduleId    String
   module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  
+
   quiz        Quiz?
   progress    Progress[]
-  
+
   @@map("lessons")
 }
 
@@ -77,8 +79,8 @@ model Quiz {
   id          String   @id @default(cuid())
   lessonId    String   @unique
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  questions   Json     // { question, options, correctAnswer }[]
-  
+  questions   Json
+
   @@map("quizzes")
 }
 
@@ -92,7 +94,7 @@ model Enrollment {
   progress    Int      @default(0)
   enrolledAt  DateTime @default(now())
   completedAt DateTime?
-  
+
   @@unique([userId, courseId])
   @@map("enrollments")
 }
@@ -105,7 +107,7 @@ model Progress {
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   completed   Boolean  @default(false)
   completedAt DateTime?
-  
+
   @@unique([userId, lessonId])
   @@map("progress")
 }
@@ -118,7 +120,7 @@ model Certificate {
   issuedAt    DateTime @default(now())
   verifyId    String   @unique
   qrCode      String?
-  
+
   @@map("certificates")
 }
 
@@ -131,7 +133,7 @@ model Payment {
   method      PaymentMethod
   status      PaymentStatus @default(PENDING)
   createdAt   DateTime @default(now())
-  
+
   @@map("payments")
 }
 
@@ -141,10 +143,143 @@ model Badge {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type        BadgeType
   earnedAt    DateTime @default(now())
-  
+
   @@unique([userId, type])
   @@map("badges")
 }
+
+// ==================== NOUVEAUX MODELES (contenu des semaines) ====================
+// Renommés pour éviter tout conflit avec tes modèles existants
+
+model CourseWeek {
+  id          String   @id @default(cuid())
+  week        Int      @unique
+  title       String
+  subtitle    String
+  duration    String
+  outcomes    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  days        WeekDay[]
+  weekQuiz    WeekQuiz?
+  assignment  WeekAssignment?
+
+  @@map("course_weeks")
+}
+
+model WeekDay {
+  id          String   @id @default(cuid())
+  courseWeekId String
+  dayId       String
+  day         Int
+  title       String
+  duration    String
+  description String
+  status      String   @default("locked")
+  dayOrder    Int
+
+  introduction   String
+  sections       DaySection[]
+  keyTakeaways   String[]
+
+  courseWeek CourseWeek @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+
+  @@unique([courseWeekId, dayId])
+  @@map("week_days")
+}
+
+model DaySection {
+  id       String @id @default(cuid())
+  weekDayId String
+  heading  String
+  body     String
+
+  weekDay WeekDay @relation(fields: [weekDayId], references: [id], onDelete: Cascade)
+
+  @@map("day_sections")
+}
+
+model WeekQuiz {
+  id           String     @id @default(cuid())
+  courseWeekId String     @unique
+  title        String
+  description  String
+  timeLimit    String
+  passingScore Int
+
+  questions QuizQuestion[]
+  courseWeek CourseWeek @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+
+  @@map("week_quizzes")
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  weekQuizId    String
+  questionId    String
+  question      String
+  options       String[]
+  correctAnswer Int
+  explanation   String
+
+  weekQuiz WeekQuiz @relation(fields: [weekQuizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_questions")
+}
+
+model WeekAssignment {
+  id                String              @id @default(cuid())
+  courseWeekId      String              @unique
+  title             String
+  description       String
+  instructions      String
+  format            String
+  deadline          String
+
+  requirements      AssignmentRequirement[]
+  evaluationCriteria String[]
+
+  courseWeek CourseWeek @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+
+  @@map("week_assignments")
+}
+
+model AssignmentRequirement {
+  id            String   @id @default(cuid())
+  assignmentId  String
+  heading       String
+  points        String[]
+
+  assignment WeekAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("assignment_requirements")
+}
+
+model UserWeekProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  weekDayId  String
+  completed  Boolean  @default(false)
+  completedAt DateTime?
+
+  @@unique([userId, weekDayId])
+  @@map("user_week_progress")
+}
+
+model WeekQuizResult {
+  id        String   @id @default(cuid())
+  userId    String
+  weekQuizId String
+  score     Int
+  answers   String
+  passed    Boolean
+  createdAt DateTime @default(now())
+
+  @@map("week_quiz_results")
+}
+
+// ==================== ENUMS EXISTANTS ====================
 
 enum Role {
   STUDENT
