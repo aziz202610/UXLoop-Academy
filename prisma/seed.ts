@@ -7,14 +7,14 @@ async function main() {
   console.log('🌱 Seeding Week 1: FOUNDATIONS...');
 
   // Supprimer les données existantes de la semaine 1 (idempotence)
-  const existing = await prisma.course.findUnique({
+  const existing = await prisma.courseWeek.findUnique({
     where: { week: 1 },
   });
   if (existing) {
-    await prisma.course.delete({ where: { week: 1 } });
+    await prisma.courseWeek.delete({ where: { week: 1 } });
   }
 
-  const course = await prisma.course.create({
+  const courseWeek = await prisma.courseWeek.create({
     data: {
       week: 1,
       title: 'FOUNDATIONS',
@@ -26,16 +26,16 @@ async function main() {
         'Knowledge of the Design Thinking process',
         'Mastery of core design principles (Color, Typography, Spacing, Alignment, Contrast)',
       ],
-      modules: {
+      days: {
         create: [
           {
-            moduleId: 'w1-d1',
+            dayId: 'w1-d1',
             day: 1,
             title: 'The UX Challenge',
             duration: '45 min',
             description: 'Understand why UX design matters and the real-world challenges designers face.',
             status: 'available',
-            order: 1,
+            dayOrder: 1,
             introduction: "Welcome to UX Loop Academy! Before we dive into tools and techniques, let's understand WHY UX design exists and what challenges you'll solve as a designer.",
             keyTakeaways: [
               'UX design solves real business problems through user-centered thinking.',
@@ -88,13 +88,13 @@ How do you measure 'delight' or 'frustration'? You'll learn to use metrics like 
             },
           },
           {
-            moduleId: 'w1-d2',
+            dayId: 'w1-d2',
             day: 2,
             title: 'What is UI/UX?',
             duration: '50 min',
             description: 'Demystify the terms UI and UX with clear definitions, analogies, and real examples.',
             status: 'locked',
-            order: 2,
+            dayOrder: 2,
             introduction: "UI and UX are often used interchangeably, but they are distinct disciplines. Let's clarify once and for all.",
             keyTakeaways: [
               'UX is the overall experience; UI is the visual and interactive layer.',
@@ -159,13 +159,13 @@ Beautiful animations and gradients, but you can't figure out what the product ac
             },
           },
           {
-            moduleId: 'w1-d3',
+            dayId: 'w1-d3',
             day: 3,
             title: 'UI vs UX vs Product Design',
             duration: '55 min',
             description: 'Understand the distinctions and overlaps between UI Design, UX Design, and Product Design.',
             status: 'locked',
-            order: 3,
+            dayOrder: 3,
             introduction: "In job postings, you'll see three titles: UI Designer, UX Designer, and Product Designer. Let's understand what each actually does.",
             keyTakeaways: [
               'UX Designers focus on research, flows, and problem-solving.',
@@ -249,13 +249,13 @@ Product Designers are the 'full-stack' designers of the digital world. They own 
             },
           },
           {
-            moduleId: 'w1-d4',
+            dayId: 'w1-d4',
             day: 4,
             title: 'Design Thinking Process',
             duration: '60 min',
             description: 'Master the 5-phase Design Thinking framework and learn when to apply each method.',
             status: 'locked',
-            order: 4,
+            dayOrder: 4,
             introduction: "Design Thinking is not just a buzzword — it's a battle-tested framework used by IDEO, Apple, Google, and IBM to solve complex problems creatively. Let's break it down.",
             keyTakeaways: [
               'Design Thinking is a 5-phase loop: Empathize → Define → Ideate → Prototype → Test.',
@@ -373,13 +373,13 @@ Iterate! Go back to any previous phase based on what you learned. Design Thinkin
             },
           },
           {
-            moduleId: 'w1-d5',
+            dayId: 'w1-d5',
             day: 5,
             title: 'Core Design Principles',
             duration: '70 min',
             description: 'Master the fundamental visual principles that make interfaces intuitive and beautiful.',
             status: 'locked',
-            order: 5,
+            dayOrder: 5,
             introduction: "Great UX starts with great visual foundations. These five principles — Color, Typography, Spacing, Alignment, and Contrast — are the building blocks of every interface you'll ever design.",
             keyTakeaways: [
               'Color communicates emotion and brand — use it intentionally.',
@@ -511,14 +511,14 @@ The most important element should have the HIGHEST contrast. Users should instan
 [Subheadline — 20px, regular, gray]  <- Medium contrast = Second read
 [CTA Button — High contrast color]   <- High contrast = Action
 [Body text — 16px, regular, gray]    <- Low contrast = Detail
-\`\`\``,
+\`\`\``, 
                 },
               ],
             },
           },
         ],
       },
-      quiz: {
+      weekQuiz: {
         create: {
           title: 'Week 1 — Foundations Quiz',
           description: 'Test your understanding of UX basics, design roles, Design Thinking, and core principles.',
@@ -635,7 +635,7 @@ The most important element should have the HIGHEST contrast. Users should instan
           },
         },
       },
-      deliverable: {
+      assignment: {
         create: {
           title: 'App Analysis Assignment',
           description: 'Apply what you have learned by analyzing a real app.',
@@ -686,7 +686,7 @@ The most important element should have the HIGHEST contrast. Users should instan
   });
 
   console.log('✅ Week 1 seeded successfully!');
-  console.log(`📊 Created course: ${course.title}`);
+  console.log(`📊 Created course week: ${courseWeek.title}`);
 }
 
 main()
