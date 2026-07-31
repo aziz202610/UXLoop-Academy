@@ -40,7 +40,6 @@ export async function GET(req: NextRequest) {
 
     const quiz = await prisma.quiz.findFirst({
       where: { lesson: { module: { courseId: course.id } } },
-      include: { questions: true },
     });
 
     const quizResult = quiz
