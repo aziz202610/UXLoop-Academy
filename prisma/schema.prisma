@@ -80,7 +80,7 @@ model Quiz {
   lessonId    String   @unique
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   questions   Json
-
+  quizResults QuizResult[]
   @@map("quizzes")
 }
 
