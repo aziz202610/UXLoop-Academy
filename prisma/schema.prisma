@@ -7,115 +7,112 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== MODELES EXISTANTS (ton académie) ====================
+// ==================== MODELES EXISTANTS ====================
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String        @id @default(cuid())
+  email         String        @unique
   name          String?
   avatar        String?
-  role          Role      @default(STUDENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role          Role          @default(STUDENT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  xp            Int           @default(0)
+  level         Int           @default(1)
 
   enrollments   Enrollment[]
   progress      Progress[]
   certificates  Certificate[]
   payments      Payment[]
   badges        Badge[]
-  xp            Int       @default(0)
-  level         Int       @default(1)
 
   @@map("users")
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  description String?
-  price       Int
-  duration    Int
-  videoCount  Int      @default(0)
-  image       String?
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  modules     Module[]
-  enrollments Enrollment[]
-
-  @@map("courses")
-}
-model Course {
-  id                String    @id @default(cuid())
+  id                String              @id @default(cuid())
   title             String
-  slug              String    @unique
+  slug              String              @unique
   description       String?
   price             Int
   duration          Int
-  videoCount        Int       @default(0)
+  videoCount        Int                 @default(0)
   image             String?
-  published         Boolean   @default(false)
-  createdAt         DateTime  @default(now())
+  published         Boolean             @default(false)
+  createdAt         DateTime            @default(now())
 
   modules           Module[]
   enrollments       Enrollment[]
-  
-  // Nouvelles relations Figma
   courseModules     CourseModule[]
   courseQuiz        CourseQuiz?
   courseDeliverable CourseDeliverable?
 
   @@map("courses")
 }
-model Module {
-  id          String   @id @default(cuid())
-  title       String
-  order       Int
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  lessons     Lesson[]
+model Module {
+  id       String   @id @default(cuid())
+  title    String
+  order    Int
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons  Lesson[]
 
   @@map("modules")
 }
 
 model Lesson {
-  id          String   @id @default(cuid())
-  title       String
-  type        LessonType
-  content     String?
-  videoUrl    String?
-  order       Int
-  moduleId    String
-  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  id       String     @id @default(cuid())
+  title    String
+  type     LessonType
+  content  String?
+  videoUrl String?
+  order    Int
+  moduleId String
+  module   Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
-  quiz        Quiz?
-  progress    Progress[]
+  quiz     Quiz?
+  progress Progress[]
 
   @@map("lessons")
 }
 
 model Quiz {
-  id          String   @id @default(cuid())
-  lessonId    String   @unique
-  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  questions   Json
+  id        String      @id @default(cuid())
+  lessonId  String      @unique
+  lesson    Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions Json
   quizResults QuizResult[]
-  
+
   @@map("quizzes")
 }
 
+model QuizResult {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  score     Int
+  maxScore  Int
+  answers   Json
+  passed    Boolean
+  createdAt DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_results")
+}
+
 model Enrollment {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  status      EnrollmentStatus @default(ACTIVE)
-  progress    Int      @default(0)
-  enrolledAt  DateTime @default(now())
-  completedAt DateTime?
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId     String
+  course       Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status       EnrollmentStatus @default(ACTIVE)
+  progress     Int             @default(0)
+  enrolledAt   DateTime        @default(now())
+  completedAt  DateTime?
 
   @@unique([userId, courseId])
   @@map("enrollments")
@@ -135,103 +132,117 @@ model Progress {
 }
 
 model Certificate {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId    String
-  issuedAt    DateTime @default(now())
-  verifyId    String   @unique
-  qrCode      String?
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  issuedAt DateTime @default(now())
+  verifyId String   @unique
+  qrCode   String?
 
   @@map("certificates")
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount      Int
-  currency    String   @default("XOF")
-  method      PaymentMethod
-  status      PaymentStatus @default(PENDING)
-  createdAt   DateTime @default(now())
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  currency  String        @default("XOF")
+  method    PaymentMethod
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
 
   @@map("payments")
 }
 
 model Badge {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        BadgeType
-  earnedAt    DateTime @default(now())
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     BadgeType
+  earnedAt DateTime @default(now())
 
   @@unique([userId, type])
   @@map("badges")
 }
 
-// ==================== NOUVEAUX MODELES (contenu des semaines) ====================
-// Renommés pour éviter tout conflit avec tes modèles existants
+model DeliverableSubmission {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonId   String
+  figmaUrl   String?
+  pngUrls    String[] @default([])
+  gifUrl     String?
+  notes      String?
+  status     String   @default("submitted")
+  feedback   String?
+  submittedAt DateTime @default(now())
+  reviewedAt DateTime?
+
+  @@map("deliverable_submissions")
+}
+
+// ==================== MODELES COURSE WEEKS ====================
 
 model CourseWeek {
-  id          String   @id @default(cuid())
-  week        Int      @unique
-  title       String
-  subtitle    String
-  duration    String
-  outcomes    String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String          @id @default(cuid())
+  week       Int             @unique
+  title      String
+  subtitle   String
+  duration   String
+  outcomes   String[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
-  days        WeekDay[]
-  weekQuiz    WeekQuiz?
-  assignment  WeekAssignment?
+  days       WeekDay[]
+  weekQuiz   WeekQuiz?
+  assignment WeekAssignment?
 
   @@map("course_weeks")
 }
 
 model WeekDay {
-  id          String   @id @default(cuid())
-  courseWeekId String
-  dayId       String
-  day         Int
-  title       String
-  duration    String
-  description String
-  status      String   @default("locked")
-  dayOrder    Int
-
+  id             String   @id @default(cuid())
+  courseWeekId   String
+  dayId          String
+  day            Int
+  title          String
+  duration       String
+  description    String
+  status         String   @default("locked")
+  dayOrder       Int
   introduction   String
-  sections       DaySection[]
   keyTakeaways   String[]
 
-  courseWeek CourseWeek @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+  courseWeek     CourseWeek   @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+  sections       DaySection[]
 
   @@unique([courseWeekId, dayId])
   @@map("week_days")
 }
 
 model DaySection {
-  id       String @id @default(cuid())
-  weekDayId String
-  heading  String
-  body     String
+  id         String   @id @default(cuid())
+  weekDayId  String
+  heading    String
+  body       String
 
-  weekDay WeekDay @relation(fields: [weekDayId], references: [id], onDelete: Cascade)
+  weekDay    WeekDay  @relation(fields: [weekDayId], references: [id], onDelete: Cascade)
 
   @@map("day_sections")
 }
 
 model WeekQuiz {
-  id           String     @id @default(cuid())
-  courseWeekId String     @unique
+  id           String         @id @default(cuid())
+  courseWeekId String         @unique
   title        String
   description  String
   timeLimit    String
   passingScore Int
 
-  questions QuizQuestion[]
-  courseWeek CourseWeek @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+  courseWeek   CourseWeek     @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+  questions    QuizQuestion[]
 
   @@map("week_quizzes")
 }
@@ -245,44 +256,43 @@ model QuizQuestion {
   correctAnswer Int
   explanation   String
 
-  weekQuiz WeekQuiz @relation(fields: [weekQuizId], references: [id], onDelete: Cascade)
+  weekQuiz      WeekQuiz @relation(fields: [weekQuizId], references: [id], onDelete: Cascade)
 
   @@map("quiz_questions")
 }
 
 model WeekAssignment {
-  id                String              @id @default(cuid())
-  courseWeekId      String              @unique
-  title             String
-  description       String
-  instructions      String
-  format            String
-  deadline          String
-
-  requirements      AssignmentRequirement[]
+  id                 String                  @id @default(cuid())
+  courseWeekId       String                  @unique
+  title              String
+  description        String
+  instructions       String
+  format             String
+  deadline           String
   evaluationCriteria String[]
 
-  courseWeek CourseWeek @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+  courseWeek         CourseWeek              @relation(fields: [courseWeekId], references: [id], onDelete: Cascade)
+  requirements       AssignmentRequirement[]
 
   @@map("week_assignments")
 }
 
 model AssignmentRequirement {
-  id            String   @id @default(cuid())
+  id            String         @id @default(cuid())
   assignmentId  String
   heading       String
   points        String[]
 
-  assignment WeekAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignment    WeekAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
   @@map("assignment_requirements")
 }
 
 model UserWeekProgress {
-  id         String   @id @default(cuid())
-  userId     String
-  weekDayId  String
-  completed  Boolean  @default(false)
+  id          String   @id @default(cuid())
+  userId      String
+  weekDayId   String
+  completed   Boolean  @default(false)
   completedAt DateTime?
 
   @@unique([userId, weekDayId])
@@ -290,20 +300,21 @@ model UserWeekProgress {
 }
 
 model WeekQuizResult {
-  id        String   @id @default(cuid())
-  userId    String
+  id         String   @id @default(cuid())
+  userId     String
   weekQuizId String
-  score     Int
-  answers   String
-  passed    Boolean
-  createdAt DateTime @default(now())
+  score      Int
+  answers    String
+  passed     Boolean
+  createdAt  DateTime @default(now())
 
   @@map("week_quiz_results")
 }
+
 // ==================== MODELES FIGMA COURSE ====================
 
 model CourseModule {
-  id           String   @id @default(cuid())
+  id           String          @id @default(cuid())
   courseId     String
   moduleId     String
   title        String
@@ -313,44 +324,44 @@ model CourseModule {
   icon         String?
   color        String?
   videoUrl     String?
-  status       String   @default("locked")
+  status       String          @default("locked")
   keyTakeaways String[]
 
-  course   Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  sections CourseSection[]
+  course       Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sections     CourseSection[]
 
   @@map("course_modules")
 }
 
 model CourseSection {
-  id             String @id @default(cuid())
+  id             String       @id @default(cuid())
   courseModuleId String
   order          Int
   heading        String
   body           String
   videoUrl       String?
 
-  courseModule CourseModule @relation(fields: [courseModuleId], references: [id], onDelete: Cascade)
+  courseModule   CourseModule @relation(fields: [courseModuleId], references: [id], onDelete: Cascade)
 
   @@map("course_sections")
 }
 
 model CourseQuiz {
-  id           String @id @default(cuid())
-  courseId     String @unique
+  id           String             @id @default(cuid())
+  courseId     String             @unique
   title        String
   description  String?
   timeLimit    String?
   passingScore Int
 
-  course    Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  questions CourseQuizQuestion[]
+  course       Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions    CourseQuizQuestion[]
 
   @@map("course_quizzes")
 }
 
 model CourseQuizQuestion {
-  id            String   @id @default(cuid())
+  id            String     @id @default(cuid())
   courseQuizId  String
   questionId    String
   question      String
@@ -358,14 +369,14 @@ model CourseQuizQuestion {
   correctAnswer Int
   explanation   String
 
-  courseQuiz CourseQuiz @relation(fields: [courseQuizId], references: [id], onDelete: Cascade)
+  courseQuiz    CourseQuiz @relation(fields: [courseQuizId], references: [id], onDelete: Cascade)
 
   @@map("course_quiz_questions")
 }
 
 model CourseDeliverable {
-  id                 String   @id @default(cuid())
-  courseId           String   @unique
+  id                 String                         @id @default(cuid())
+  courseId           String                         @unique
   title              String
   description        String?
   instructions       String?
@@ -373,23 +384,24 @@ model CourseDeliverable {
   deadline           String?
   evaluationCriteria String[]
 
-  course       Course                        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  requirements CourseDeliverableRequirement[]
+  course             Course                         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  requirements       CourseDeliverableRequirement[]
 
   @@map("course_deliverables")
 }
 
 model CourseDeliverableRequirement {
-  id            String   @id @default(cuid())
+  id            String            @id @default(cuid())
   deliverableId String
   heading       String
   points        String[]
 
-  deliverable CourseDeliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  deliverable   CourseDeliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
 
   @@map("course_deliverable_requirements")
 }
-// ==================== ENUMS EXISTANTS ====================
+
+// ==================== ENUMS ====================
 
 enum Role {
   STUDENT
@@ -433,34 +445,4 @@ enum BadgeType {
   PORTFOLIO
   MENTOR
   FIGMA_EXPERT
-}
-model QuizResult {
-  id        String   @id @default(cuid())
-  userId    String
-  quizId    String
-  score     Int
-  maxScore  Int
-  answers   Json
-  passed    Boolean
-  createdAt DateTime @default(now())
-
-  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-
-  @@map("quiz_results")
-}
-
-model DeliverableSubmission {
-  id          String   @id @default(cuid())
-  userId      String
-  lessonId    String
-  figmaUrl    String?
-  pngUrls     String[] @default([])
-  gifUrl      String?
-  notes       String?
-  status      String   @default("submitted")
-  feedback    String?
-  submittedAt DateTime @default(now())
-  reviewedAt  DateTime?
-
-  @@map("deliverable_submissions")
 }
