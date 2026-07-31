@@ -324,3 +324,33 @@ enum BadgeType {
   MENTOR
   FIGMA_EXPERT
 }
+model QuizResult {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  score     Int
+  maxScore  Int
+  answers   Json
+  passed    Boolean
+  createdAt DateTime @default(now())
+
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_results")
+}
+
+model DeliverableSubmission {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  figmaUrl    String?
+  pngUrls     String[] @default([])
+  gifUrl      String?
+  notes       String?
+  status      String   @default("submitted")
+  feedback    String?
+  submittedAt DateTime @default(now())
+  reviewedAt  DateTime?
+
+  @@map("deliverable_submissions")
+}
