@@ -121,7 +121,7 @@ export default function FigmaCoursePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, lessonId: currentLesson.id, completed: true }),
       });
-      setCompletedLessons((prev) => new Set([...prev, currentLesson.id]));
+      setCompletedLessons((prev) => new Set(Array.from(prev).concat(currentLesson.id)));
       setProgressPercent((prev) => Math.min(prev + Math.ceil(100 / (course.modules?.length || 1)), 100));
     } catch (e) { console.error(e); }
     finally { setSavingProgress(false); }
